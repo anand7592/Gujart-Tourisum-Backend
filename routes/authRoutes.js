@@ -7,7 +7,7 @@ const router = express.Router();
 // --- SECURITY: Rate Limiter ---
 // This prevents hackers from spamming the login route
 const authLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 15 minutes
+  windowMs: 10 * 60 * 1000, // 15 minutes
   max: 10, // limit each IP to 10 requests per windowMs
   message: {
     message:
