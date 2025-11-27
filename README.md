@@ -1,1 +1,1 @@
-https://gujrattour.netlify.app/login
+https://gujrattour.netlify.app/
