@@ -30,22 +30,29 @@ exports.protect = async (req, res, next) => {
           .json({ message: "User not found, access denied" });
       }
 
-      next();
+      // SUCCESS: Move to the controller
+      return next();
     } catch (error) {
       console.error("Auth Error:", error.message);
       // 401 = Unauthorized (Identity unknown/invalid)
       return res.status(401).json({ message: "Not authorized, token failed" });
     }
   }
+
+  // 2. THE DEAD END FIX
+  // If we get here, it means there was NO token header.
+  // We MUST send a response, or the server will hang.
+  if (!token) {
+    return res.status(401).json({ message: "Not authorized, no token" });
+  }
 };
 
-
 // @desc    Grant access to Admins only
-exports.admin = (req,res,next) => {
-    if(req.user && req.user.isAdmin === true){
-        next();
-    }else{
-        // 403 = Forbidden (Identity known, but permission denied)
-        res.status(403).json({message: "Not authorized as an admin"});
-    }
-}
+exports.admin = (req, res, next) => {
+  if (req.user && req.user.isAdmin === true) {
+    next();
+  } else {
+    // 403 = Forbidden (Identity known, but permission denied)
+    res.status(403).json({ message: "Not authorized as an admin" });
+  }
+};
