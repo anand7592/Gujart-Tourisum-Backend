@@ -2,7 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const cors = require("cors");
-const mongoSanitize = require("express-mongo-sanitize");
+const sanitize = require("mongo-sanitize");
 const connectDB = require("./config/db");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
@@ -33,13 +33,22 @@ app.use(cors({
   credentials: true
 }));
 
-// C. Data Sanitization: Prevents NoSQL Injection
-// Stops hackers from sending data like { "$gt": "" } to bypass logins
-app.use(mongoSanitize());
-
 // --- STANDARD MIDDLEWARE ---
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
+
+
+// C. Data Sanitization: Prevents NoSQL Injection
+// Stops hackers from sending data like { "$gt": "" } to bypass logins
+// This replaces 'express-mongo-sanitize' to fix the "Read-Only" bug
+app.use((req, res, next) => {
+  req.body = sanitize(req.body);
+  req.query = sanitize(req.query);
+  req.params = sanitize(req.params);
+  next();
+});
+
+
 
 // --- ROUTES ---
 app.use('/api/auth', authRoutes);

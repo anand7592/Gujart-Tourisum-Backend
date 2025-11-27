@@ -60,11 +60,15 @@ const userSchema = new mongoose.Schema(
 );
 
 // Hash password before save
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();  //prevents a specific bug called "Double Hashing."
+// We remove 'next' from the arguments and the code.
+// Mongoose knows to wait because we used 'async'.
+userSchema.pre("save", async function () {
+  // 1. If password is not modified, just return (exit the function)
+  if (!this.isModified("password")) return;
+
+  // 2. Hash the password
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // Compare password method
