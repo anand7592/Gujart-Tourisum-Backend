@@ -1,23 +1,56 @@
-const express = require('express');
-require('dotenv').config()
-const connectDB = require('./config/db');
+const express = require("express");
+const dotenv = require("dotenv");
+const helmet = require("helmet");
+const cors = require("cors");
+const mongoSanitize = require("express-mongo-sanitize");
+const connectDB = require("./config/db");
+const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
-//import routes
+
+//imports Routes
 const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
 
+// 1. Config
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-
-// Routes
-app.use('/api/users', userRoutes);
-
-// Connect to Database
+// 2. CONNECT TO DATABASE
+// We call this early. The server logic below will wait for this connection.
 connectDB();
 
+// --- SECURITY MIDDLEWARE ---
+
+// A. Helmet: Sets various HTTP headers to secure the app
+// (e.g., hides "X-Powered-By: Express" so hackers don't know your tech stack)
+app.use(helmet());
+
+// B. CORS: Allows your Frontend to talk to this Backend
+// In production, replace '*' with your actual frontend URL (e.g., 'https://myapp.com')
+app.use(cors({
+  origin: process.env.CLIENT_URL || "*", 
+  credentials: true
+}));
+
+// C. Data Sanitization: Prevents NoSQL Injection
+// Stops hackers from sending data like { "$gt": "" } to bypass logins
+app.use(mongoSanitize());
+
+// --- STANDARD MIDDLEWARE ---
+app.use(express.json()); // Parse JSON request bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
+
+// --- ROUTES ---
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+
+// --- ERROR HANDLING ---
+// (Must be the last app.use calls)
+app.use(notFound);
+app.use(errorHandler);
+
+// --- START SERVER ---
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server is running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
