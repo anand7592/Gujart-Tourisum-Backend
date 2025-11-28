@@ -5,7 +5,7 @@ const {
   createPlace,
   updatePlace,
   deletePlace,
-} = require("../controllers/placeController");
+} = require("../controller/placeController");
 const { protect, admin } = require("../middleware/authMiddleware");
 
 // Public: Get all places
