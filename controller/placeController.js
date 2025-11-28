@@ -5,7 +5,9 @@ const Place = require("../models/Place");
 // @access  Public (or Private depending on needs)
 exports.getPlaces = async (req, res, next) => {
   try {
-    const places = await Place.find().sort({ createdAt: -1 }); // Newest first
+    const places = await Place.find()
+      .sort({ createdAt: -1 })
+      .populate("createdBy", "email firstName lastName"); // Newest first
     res.status(200).json(places);
   } catch (error) {
     next(error);
@@ -21,7 +23,9 @@ exports.createPlace = async (req, res, next) => {
 
     if (!name || !description || !location) {
       res.status(400);
-      throw new Error("Please fill in all required fields (Name, Desc, Location)");
+      throw new Error(
+        "Please fill in all required fields (Name, Desc, Location)"
+      );
     }
 
     const place = await Place.create({
