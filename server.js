@@ -10,6 +10,7 @@ const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 //imports Routes
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
+const placeRoutes = require("./routes/placeRoutes"); 
 
 // 1. Config
 dotenv.config();
@@ -53,6 +54,7 @@ app.use((req, res, next) => {
 // --- ROUTES ---
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use("/api/places", placeRoutes);
 
 // --- ERROR HANDLING ---
 // (Must be the last app.use calls)
