@@ -20,11 +20,10 @@ const placeSchema = new mongoose.Schema(
 );
 
 // Middleware: Sanitize data before saving (Extra Security Layer)
-placeSchema.pre("save", function (next) {
+placeSchema.pre("save", function () {
   this.name = sanitize(this.name);
   this.description = sanitize(this.description);
   this.location = sanitize(this.location);
-  next();
 });
 
 module.exports = mongoose.model("Place", placeSchema);
