@@ -1,33 +1,31 @@
 const express = require("express");
 const rateLimit = require("express-rate-limit");
-const { register, login } = require("../controller/authController");
+const { register, login, logout, getMe } = require("../controller/authController");
+
+const { protect } = require("../middleware/authMiddleware"); 
 
 const router = express.Router();
 
-// --- SECURITY: Rate Limiter ---
-// This prevents hackers from spamming the login route
+// Rate Limiter (Optional, but good to keep if you added it earlier)
 const authLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 requests per windowMs
-  message: {
-    message:
-      "Too many attempts from this IP, please try again after 15 minutes",
-  },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  windowMs: 15 * 60 * 1000, 
+  max: 10, 
+  message: { message: "Too many attempts, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // --- ROUTES ---
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
+// Public Routes
 router.post("/register", authLimiter, register);
-
-
-// @route   POST /api/auth/login
-// @desc    Login user & get token
-// @access  Public
 router.post("/login", authLimiter, login);
+
+// Protected Routes
+// We changed logout to GET so it's easier to call from frontend
+router.get("/logout", logout); 
+
+// This was the line causing the error
+router.get("/me", protect, getMe); 
 
 module.exports = router;

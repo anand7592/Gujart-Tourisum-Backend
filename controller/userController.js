@@ -5,8 +5,6 @@ const User = require("../models/User");
 // @access  Private/Admin
 exports.getUsers = async (req, res, next) => {
   try {
-    // 1. Clean: Select only what you need (exclude password)
-    // Optional: Add .lean() for faster performance if just reading data
     const users = await User.find().select("-password").lean();
     res.status(200).json(users);
   } catch (error) {
@@ -22,7 +20,6 @@ exports.getUserById = async (req, res, next) => {
     const user = await User.findById(req.params.id).select("-password");
 
     if (!user) {
-      // Use standard error pattern
       res.status(404);
       throw new Error("User not found");
     }
@@ -38,8 +35,6 @@ exports.getUserById = async (req, res, next) => {
 // @access  Private/Admin
 exports.createUser = async (req, res, next) => {
   try {
-    // 1. SECURITY: Prevent Mass Assignment
-    // Manually extract only the fields we allow an admin to set
     const {
       firstName,
       middleName,
@@ -51,7 +46,13 @@ exports.createUser = async (req, res, next) => {
       isAdmin,
     } = req.body;
 
-    //2.Check if user exists
+    // 1. Basic Validation
+    if (!email || !password || !firstName) {
+      res.status(400);
+      throw new Error("Please fill in all required fields");
+    }
+
+    // 2. Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       res.status(400);
@@ -59,7 +60,7 @@ exports.createUser = async (req, res, next) => {
     }
 
     // 3. Create User
-    // Because we use .create(), the Password Hashing Hook WILL run.
+    // The Model's pre-save hook will handle password hashing
     const user = await User.create({
       firstName,
       middleName,
@@ -68,9 +69,10 @@ exports.createUser = async (req, res, next) => {
       password,
       address,
       contactNo,
-      isAdmin,
+      isAdmin: isAdmin || false, // Default to false if undefined
     });
 
+    // 4. Clean response
     const userData = user.toObject();
     delete userData.password;
 
@@ -85,7 +87,6 @@ exports.createUser = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateUser = async (req, res, next) => {
   try {
-    // 1. Find the user first
     const user = await User.findById(req.params.id);
 
     if (!user) {
@@ -93,11 +94,7 @@ exports.updateUser = async (req, res, next) => {
       throw new Error("User not found");
     }
 
-    // 2. SECURITY: Manual Updates
-    // We do NOT use findByIdAndUpdate here.
-    // Why? Because we want the 'save' hook to run if the password changes.
-
-    // Update fields only if they are sent in req.body
+    // Manual Updates (allows Mongoose hooks to run if password changes)
     user.firstName = req.body.firstName || user.firstName;
     user.middleName = req.body.middleName || user.middleName;
     user.lastName = req.body.lastName || user.lastName;
@@ -105,24 +102,19 @@ exports.updateUser = async (req, res, next) => {
     user.address = req.body.address || user.address;
     user.contactNo = req.body.contactNo || user.contactNo;
 
-    // Only update isAdmin if it is provided (and ensure it's a boolean)
     if (req.body.isAdmin !== undefined) {
       user.isAdmin = req.body.isAdmin;
     }
 
-    // 3. Password Handling
-    // If a new password is sent, update it.
-    // The pre-save hook in your Model will detect this and hash it.
     if (req.body.password) {
       user.password = req.body.password;
     }
 
-    //4.Save
-    // This triggers validation AND the password hashing hook
-    const updateUser = await user.save();
+    // BUG FIX: Renamed variable from 'updateUser' to 'updatedUser'
+    // to avoid conflict with the function name.
+    const updatedUser = await user.save();
 
-    // 5. Clean response
-    const responseUser = updateUser.toObject();
+    const responseUser = updatedUser.toObject();
     delete responseUser.password;
 
     res.status(200).json(responseUser);
@@ -143,7 +135,13 @@ exports.deleteUser = async (req, res, next) => {
       throw new Error("User not found");
     }
 
-    // Use .deleteOne() or .remove() depending on Mongoose version
+    // SECURITY FIX: Prevent Admin from deleting themselves
+    // req.user is set by your authMiddleware
+    if (user._id.toString() === req.user._id.toString()) {
+      res.status(400);
+      throw new Error("You cannot delete your own admin account.");
+    }
+
     await user.deleteOne();
 
     res.status(200).json({ message: "User deleted successfully" });

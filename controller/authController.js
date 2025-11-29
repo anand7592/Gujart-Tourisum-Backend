@@ -128,12 +128,11 @@ exports.logout = async (req, res) => {
   });
 };
 
-// @desc    Get current user profile
+// @desc    Get current user (The Source of Truth)
 // @route   GET /api/auth/me
 // @access  Private
 exports.getMe = async (req, res) => {
-  // req.user is already set by protect middleware
-  res.status(200).json({
-    user: req.user,
-  });
+  // req.user is set by the 'protect' middleware which decodes the secure Cookie
+  const user = await User.findById(req.user._id).select("-password"); // Get fresh data
+  res.status(200).json({ user });
 };

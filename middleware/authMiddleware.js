@@ -5,45 +5,43 @@ const User = require("../models/User");
 exports.protect = async (req, res, next) => {
   let token;
 
-  // 1. Check if Authorization header exists and starts with 'Bearer'
-  if (
+  // 1. Check for token in cookie FIRST (since you're setting it in cookie)
+  if (req.cookies.token) {
+    token = req.cookies.token;
+  }
+  // 2. Fallback to Authorization header (for API clients)
+  else if (
     req.headers.authorization &&
     req.headers.authorization.startsWith("Bearer")
   ) {
-    try {
-      // 2. Get token from header
-      // Header format: "Bearer <token_string>"
-      token = req.headers.authorization.split(" ")[1];
-
-      // 3. Verify Token
-      // This will throw an error if token is expired or invalid
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-      // 4. Get User from the token's ID
-      // We exclude the password so we don't accidentally expose it later
-      req.user = await User.findById(decoded.id).select("-password");
-
-      // 5. Check if user was deleted *after* token was issued
-      if (!req.user) {
-        return res
-          .status(401)
-          .json({ message: "User not found, access denied" });
-      }
-
-      // SUCCESS: Move to the controller
-      return next();
-    } catch (error) {
-      console.error("Auth Error:", error.message);
-      // 401 = Unauthorized (Identity unknown/invalid)
-      return res.status(401).json({ message: "Not authorized, token failed" });
-    }
+    token = req.headers.authorization.split(" ")[1];
   }
 
-  // 2. THE DEAD END FIX
-  // If we get here, it means there was NO token header.
-  // We MUST send a response, or the server will hang.
+  // 3. If no token found anywhere
   if (!token) {
     return res.status(401).json({ message: "Not authorized, no token" });
+  }
+
+  try {
+    // 4. Verify Token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // 5. Get User from the token's ID
+    req.user = await User.findById(decoded.id).select("-password");
+
+    // 6. Check if user was deleted *after* token was issued
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ message: "User not found, access denied" });
+    }
+
+    // SUCCESS: Move to the controller
+    next();
+  } catch (error) {
+    console.error("Auth Error:", error.message);
+    // 401 = Unauthorized (Identity unknown/invalid)
+    return res.status(401).json({ message: "Not authorized, token failed" });
   }
 };
 
