@@ -6,7 +6,7 @@ const placeSchema = new mongoose.Schema(
     name: { type: String, required: true },
     description: { type: String, required: true },
     location: { type: String, required: true },
-    image: { type: String, default: "" }, // Stores URL string
+    image: { type: String, default: "" }, // This line allows the image URL to be saved
     price: { type: Number, default: 0 },  // Entry fee or package cost
     
     // Link to the Admin who created it (Audit trail)

@@ -9,7 +9,7 @@ const storage = new CloudinaryStorage({
     folder: "gujarat_tourism", // The folder name in your Cloudinary Dashboard
     allowed_formats: ["jpg", "png", "jpeg", "webp"],
     // Optional: transformation to resize images automatically
-    // transformation: [{ width: 800, height: 600, crop: "limit" }]
+    transformation: [{ width: 800, height: 600, crop: "limit" }]
   },
 });
 

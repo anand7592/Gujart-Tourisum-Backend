@@ -1,4 +1,5 @@
 const Place = require("../models/Place");
+const cloudinary = require("../config/cloudinary"); // Import if you need to delete images later
 
 // @desc    Get all places
 // @route   GET /api/places
@@ -19,13 +20,16 @@ exports.getPlaces = async (req, res, next) => {
 // @access  Private/Admin
 exports.createPlace = async (req, res, next) => {
   try {
+    // DEBUGGING: Check if file is reaching the controller
     console.log("BODY:", req.body);
     console.log("FILE:", req.file);
     const { name, description, location, price } = req.body;
 
-    // Get Cloudinary URL if file was uploaded
-    // If no file, use an empty string or default image
-    const image = req.file ? req.file.path : "";
+    // 1. Check if file exists. If so, use .path (which is the Cloudinary URL)
+    let image = "";
+    if (req.file && req.file.path) {
+      image = req.file.path;
+    }
 
     if (!name || !description || !location) {
       res.status(400);
@@ -38,8 +42,9 @@ exports.createPlace = async (req, res, next) => {
       name,
       description,
       location,
-      price: price || 0,
-      image, // Save the Cloudinary URL
+      // Convert string "500" to Number 500
+      price: Number(price) || 0,
+      image:image, // Save the Cloudinary URL
       createdBy: req.user._id, // Track who made it
     });
 
@@ -65,10 +70,10 @@ exports.updatePlace = async (req, res, next) => {
     place.name = req.body.name || place.name;
     place.description = req.body.description || place.description;
     place.location = req.body.location || place.location;
-    place.price = req.body.price || place.price;
+    place.price = req.body.price ? Number(req.body.price) : place.price;
 
     // Update Image ONLY if a new file is uploaded
-    if (req.file) {
+    if (req.file && req.file.path) {
       place.image = req.file.path;
     }
 
@@ -90,6 +95,9 @@ exports.deletePlace = async (req, res, next) => {
       res.status(404);
       throw new Error("Place not found");
     }
+
+    // OPTIONAL: Delete image from Cloudinary here
+    // You would need to store the 'public_id' in your DB to do this effectively
 
     await place.deleteOne();
     res.status(200).json({ message: "Place deleted successfully" });
