@@ -6,14 +6,15 @@ const sanitize = require("mongo-sanitize");
 const connectDB = require("./config/db");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
+// 1. Config
+dotenv.config();
 
 //imports Routes
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const placeRoutes = require("./routes/placeRoutes"); 
 
-// 1. Config
-dotenv.config();
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 

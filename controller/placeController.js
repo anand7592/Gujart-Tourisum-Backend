@@ -19,7 +19,13 @@ exports.getPlaces = async (req, res, next) => {
 // @access  Private/Admin
 exports.createPlace = async (req, res, next) => {
   try {
-    const { name, description, location, price, image } = req.body;
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+    const { name, description, location, price } = req.body;
+
+    // Get Cloudinary URL if file was uploaded
+    // If no file, use an empty string or default image
+    const image = req.file ? req.file.path : "";
 
     if (!name || !description || !location) {
       res.status(400);
@@ -33,7 +39,7 @@ exports.createPlace = async (req, res, next) => {
       description,
       location,
       price: price || 0,
-      image,
+      image, // Save the Cloudinary URL
       createdBy: req.user._id, // Track who made it
     });
 
@@ -60,7 +66,11 @@ exports.updatePlace = async (req, res, next) => {
     place.description = req.body.description || place.description;
     place.location = req.body.location || place.location;
     place.price = req.body.price || place.price;
-    place.image = req.body.image || place.image;
+
+    // Update Image ONLY if a new file is uploaded
+    if (req.file) {
+      place.image = req.file.path;
+    }
 
     const updatedPlace = await place.save();
     res.status(200).json(updatedPlace);
