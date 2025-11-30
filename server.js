@@ -16,6 +16,7 @@ const authRoutes = require("./routes/authRoutes");
 const placeRoutes = require("./routes/placeRoutes");
 const subPlaceRoutes = require("./routes/subPlaceRoutes");
 const ratingRoutes = require("./routes/ratingRoutes");
+const hotelRoutes = require("./routes/hotelRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -80,6 +81,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/places", placeRoutes);
 app.use("/api/subplaces", subPlaceRoutes);
 app.use("/api/ratings", ratingRoutes);
+app.use("/api/hotels", hotelRoutes);
 
 // --- HEALTH CHECK ROUTE (Optional but recommended) ---
 app.get("/api/health", (req, res) => {
