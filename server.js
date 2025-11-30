@@ -14,6 +14,7 @@ dotenv.config();
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
 const placeRoutes = require("./routes/placeRoutes");
+const subPlaceRoutes = require("./routes/subPlaceRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -76,6 +77,7 @@ app.use((req, res, next) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/places", placeRoutes);
+app.use("/api/subplaces", subPlaceRoutes);
 
 // --- HEALTH CHECK ROUTE (Optional but recommended) ---
 app.get("/api/health", (req, res) => {
