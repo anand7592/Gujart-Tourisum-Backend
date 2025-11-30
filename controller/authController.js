@@ -6,19 +6,23 @@ const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, isAdmin: user.isAdmin },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } // Expire from 7d for security
+    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
   );
 };
 
 // Helper function to set cookie with token
 const setTokenCookie = (res, token) => {
+  const isProduction = process.env.NODE_ENV === "production";
+  
   const cookieOptions = {
     httpOnly: true, // Cannot be accessed via JavaScript (XSS protection)
-    secure: process.env.NODE_ENV === "production", // Only HTTPS in production
-    sameSite: "strict", // CSRF protection
+    secure: isProduction, // Only HTTPS in production
+    sameSite: isProduction ? "none" : "lax", // CRITICAL for cross-origin in production
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    path: "/", // Available on all routes
   };
 
+  console.log("🍪 Setting cookie with options:", cookieOptions);
   res.cookie("token", token, cookieOptions);
 };
 
@@ -63,6 +67,8 @@ exports.register = async (req, res, next) => {
     const userData = user.toObject();
     delete userData.password;
 
+    console.log("✅ User registered successfully:", userData.email);
+
     res.status(201).json({
       message: "User registered successfully",
       user: userData,
@@ -79,6 +85,8 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    console.log("🔐 Login attempt for:", email);
+
     // 1. Input Validation
     if (!email || !password) {
       return res.status(400).json({
@@ -91,8 +99,11 @@ exports.login = async (req, res, next) => {
 
     // 3. Check User Existence AND Password Match
     if (!user || !(await user.matchPassword(password))) {
+      console.log("❌ Invalid credentials for:", email);
       return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    console.log("✅ Password verified for:", email, "isAdmin:", user.isAdmin);
 
     // 4. Generate Token and set cookie
     const token = generateToken(user);
@@ -102,12 +113,20 @@ exports.login = async (req, res, next) => {
     const userData = user.toObject();
     delete userData.password;
 
+    console.log("✅ Login successful for:", email);
+    console.log("📦 Sending user data:", { 
+      id: userData._id, 
+      email: userData.email, 
+      isAdmin: userData.isAdmin 
+    });
+
     // 6. Send Response
     res.status(200).json({
       message: "Login successful",
       user: userData,
     });
   } catch (error) {
+    console.error("❌ Login error:", error);
     next(error);
   }
 };
@@ -116,12 +135,17 @@ exports.login = async (req, res, next) => {
 // @route   POST /api/auth/logout
 // @access  Private
 exports.logout = async (req, res) => {
+  const isProduction = process.env.NODE_ENV === "production";
+  
   res.cookie("token", "", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     expires: new Date(0), // Expire immediately
+    path: "/",
   });
+
+  console.log("✅ User logged out");
 
   res.status(200).json({
     message: "Logged out successfully",
@@ -134,5 +158,12 @@ exports.logout = async (req, res) => {
 exports.getMe = async (req, res) => {
   // req.user is set by the 'protect' middleware which decodes the secure Cookie
   const user = await User.findById(req.user._id).select("-password"); // Get fresh data
+  
+  console.log("✅ /me endpoint called for:", {
+    id: user._id,
+    email: user.email,
+    isAdmin: user.isAdmin
+  });
+  
   res.status(200).json({ user });
 };
