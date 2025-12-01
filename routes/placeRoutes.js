@@ -7,15 +7,15 @@ const {
   deletePlace,
 } = require("../controller/placeController");
 const { protect, admin } = require("../middleware/authMiddleware");
-const upload = require("../middleware/uploadMiddleware");
+const { placeUpload } = require("../middleware/uploadMiddleware");
 
 // Public: Get all places
 router.get("/", getPlaces);
 
 // Admin Only: Create, Update, Delete
-// Apply upload middleware to POST and PUT
-router.post("/", protect, admin, upload.single("image"), createPlace);
-router.put("/:id", protect, admin, upload.single("image"), updatePlace);
+// Apply upload middleware to POST and PUT with place-specific folder
+router.post("/", protect, admin, placeUpload.array("images", 10), createPlace);
+router.put("/:id", protect, admin, placeUpload.array("images", 10), updatePlace);
 
 router.delete("/:id", protect, admin, deletePlace);
 

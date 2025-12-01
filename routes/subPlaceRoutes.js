@@ -8,12 +8,12 @@ const {
   deleteSubPlace,
 } = require("../controller/subPlaceController");
 const { protect, admin } = require("../middleware/authMiddleware");
-const upload = require("../middleware/uploadMiddleware");
+const { placeUpload } = require("../middleware/uploadMiddleware");
 
 router.get("/", getSubPlaces);
 router.get("/:id", getSubPlaceById);
-router.post("/", protect, admin, upload.single("image"), createSubPlace);
-router.put("/:id", protect, admin, upload.single("image"), updateSubPlace);
+router.post("/", protect, admin, placeUpload.single("image"), createSubPlace);
+router.put("/:id", protect, admin, placeUpload.single("image"), updateSubPlace);
 router.delete("/:id", protect, admin, deleteSubPlace);
 
 module.exports = router;

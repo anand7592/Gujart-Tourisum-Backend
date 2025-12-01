@@ -8,7 +8,7 @@ const {
   deleteHotel,
 } = require("../controller/hotelController");
 const { protect, admin } = require("../middleware/authMiddleware");
-const upload = require("../middleware/uploadMiddleware");
+const { hotelUpload } = require("../middleware/uploadMiddleware");
 
 // Public Routes
 router.get("/", getHotels);
@@ -20,7 +20,7 @@ router.post(
   "/", 
   protect, 
   admin, 
-  upload.array("images", 5), 
+  hotelUpload.array("images", 5), 
   createHotel
 );
 
@@ -28,7 +28,7 @@ router.put(
   "/:id", 
   protect, 
   admin, 
-  upload.array("images", 5), 
+  hotelUpload.array("images", 5), 
   updateHotel
 );
 
