@@ -43,10 +43,12 @@ exports.getBookings = async (req, res, next) => {
     };
 
     const bookings = await Booking.find(query)
+      .lean()
       .populate(options.populate)
       .sort(options.sort)
       .limit(options.limit * 1)
-      .skip((options.page - 1) * options.limit);
+      .skip((options.page - 1) * options.limit)
+      .exec();
 
     const total = await Booking.countDocuments(query);
 

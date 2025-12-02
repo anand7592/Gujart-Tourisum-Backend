@@ -64,6 +64,15 @@ const hotelSchema = new Schema(
   { timestamps: true } // createdAt, updatedAt
 );
 
+// CRITICAL INDEXES FOR PERFORMANCE
+hotelSchema.index({ place: 1, isActive: 1 }); // Filter by place and active
+hotelSchema.index({ category: 1 }); // Filter by category
+hotelSchema.index({ pricePerNight: 1 }); // Sort/filter by price
+hotelSchema.index({ averageRating: -1 }); // Sort by rating
+hotelSchema.index({ location: 1 }); // Filter by location
+hotelSchema.index({ createdAt: -1 }); // Sort by newest
+hotelSchema.index({ name: 'text', description: 'text' }); // Full-text search
+
 // Sanitize key string fields before saving
 hotelSchema.pre("save", function () {
   this.name = sanitize(this.name);

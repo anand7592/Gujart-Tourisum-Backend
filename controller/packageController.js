@@ -67,10 +67,12 @@ exports.getPackages = async (req, res, next) => {
     };
 
     const packages = await Package.find(query)
+      .lean()
       .populate(options.populate)
       .sort(options.sort)
       .limit(options.limit * 1)
-      .skip((options.page - 1) * options.limit);
+      .skip((options.page - 1) * options.limit)
+      .exec();
 
     const total = await Package.countDocuments(query);
 

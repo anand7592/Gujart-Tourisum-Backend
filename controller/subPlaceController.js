@@ -10,6 +10,7 @@ exports.getSubPlaces = async (req, res, next) => {
     const query = placeId ? { place: placeId } : {};
     
     const subPlaces = await SubPlace.find(query)
+      .lean()
       .sort({ createdAt: -1 })
       .populate("place", "name location")
       .populate("createdBy", "firstName lastName");

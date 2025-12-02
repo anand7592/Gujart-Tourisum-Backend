@@ -15,6 +15,7 @@ exports.getRatings = async (req, res, next) => {
     if (subPlaceId) query.subPlace = subPlaceId;
     
     const ratings = await Rating.find(query)
+      .lean()
       .sort({ createdAt: -1 })
       .populate("user", "firstName lastName")
       .populate("hotel", "name")

@@ -200,10 +200,13 @@ const bookingSchema = new Schema(
 );
 
 // Indexes for better query performance
-bookingSchema.index({ user: 1, createdAt: -1 });
-bookingSchema.index({ hotel: 1, checkInDate: 1 });
-bookingSchema.index({ bookingStatus: 1, paymentStatus: 1 });
-bookingSchema.index({ checkInDate: 1, checkOutDate: 1 });
+bookingSchema.index({ user: 1, createdAt: -1 }); // User's bookings
+bookingSchema.index({ hotel: 1, checkInDate: 1 }); // Hotel availability
+bookingSchema.index({ bookingStatus: 1, paymentStatus: 1 }); // Filter by status
+bookingSchema.index({ checkInDate: 1, checkOutDate: 1 }); // Date range queries
+bookingSchema.index({ razorpayOrderId: 1 }); // Payment verification
+bookingSchema.index({ createdAt: -1 }); // Sort by newest
+
 
 // Virtual for booking duration in days
 bookingSchema.virtual('durationInDays').get(function() {

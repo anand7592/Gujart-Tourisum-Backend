@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const sanitize = require("mongo-sanitize");
+const compression = require("compression");
 const connectDB = require("./config/db");
 const { notFound, errorHandler } = require("./middleware/errorMiddleware");
 
@@ -26,6 +27,15 @@ const PORT = process.env.PORT || 5000;
 // 2. CONNECT TO DATABASE
 connectDB();
 
+// 1. GZIP Compression for responses (reduces size by 70-90%)
+app.use(compression());
+
+// 2. Trust proxy (for production behind reverse proxy)
+app.set("trust proxy", 1);
+
+// 3. Disable x-powered-by header
+app.disable("x-powered-by");
+
 // --- SECURITY MIDDLEWARE ---
 
 // A. Helmet: Sets various HTTP headers to secure the app
@@ -45,7 +55,7 @@ app.use(
     origin: function (origin, callback) {
       // Allow requests with no origin (like mobile apps or Postman)
       if (!origin) return callback(null, true);
-      
+
       if (allowedOrigins.indexOf(origin) === -1) {
         const msg = `The CORS policy for this site does not allow access from origin ${origin}`;
         return callback(new Error(msg), false);
@@ -55,6 +65,7 @@ app.use(
     credentials: true, // CRITICAL: Allows cookies to be sent/received
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400, // Cache preflight for 24 hours
   })
 );
 
@@ -64,10 +75,10 @@ app.use(
 app.use(cookieParser());
 
 // Parse JSON request bodies
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 // Parse URL-encoded request bodies
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // C. Data Sanitization: Prevents NoSQL Injection
 app.use((req, res, next) => {
@@ -104,10 +115,14 @@ app.use(errorHandler);
 // --- START SERVER ---
 app.listen(PORT, () => {
   console.log(
-    `🚀 Server is running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`
+    `🚀 Server is running in ${
+      process.env.NODE_ENV || "development"
+    } mode on port ${PORT}`
   );
   console.log(`📡 API available at: http://localhost:${PORT}/api`);
-  console.log(`🌐 Frontend URL: ${process.env.CLIENT_URL || "http://localhost:5173"}`);
+  console.log(
+    `🌐 Frontend URL: ${process.env.CLIENT_URL || "http://localhost:5173"}`
+  );
 });
 
 module.exports = app;

@@ -8,7 +8,9 @@ exports.getPlaces = async (req, res, next) => {
   try {
     const places = await Place.find()
       .sort({ createdAt: -1 })
-      .populate("createdBy", "email firstName lastName"); // Newest first
+      .lean()
+      .populate("createdBy", "email firstName lastName") // Newest first
+      .exec();
     res.status(200).json(places);
   } catch (error) {
     next(error);
