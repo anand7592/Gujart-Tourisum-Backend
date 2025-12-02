@@ -14,8 +14,8 @@ router.get("/", getPlaces);
 
 // Admin Only: Create, Update, Delete
 // Apply upload middleware to POST and PUT with place-specific folder
-router.post("/", protect, admin, placeUpload.array("images", 10), createPlace);
-router.put("/:id", protect, admin, placeUpload.array("images", 10), updatePlace);
+router.post("/", protect, admin, placeUpload.single("image"), createPlace);
+router.put("/:id", protect, admin, placeUpload.single("image"), updatePlace);
 
 router.delete("/:id", protect, admin, deletePlace);
 
