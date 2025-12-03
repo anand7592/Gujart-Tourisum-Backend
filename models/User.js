@@ -43,7 +43,7 @@ const userSchema = new mongoose.Schema(
       set: sanitize // Apply sanitizer (Critical for text blocks)
     },
     contactNo: { 
-      type: String, 
+      type: Number, 
       required: true,
       set: sanitize // Apply sanitizer
     },
